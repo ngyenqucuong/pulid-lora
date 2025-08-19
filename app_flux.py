@@ -48,8 +48,9 @@ def get_models(name: str, device: torch.device, offload: bool, fp8: bool):
     return model, ae, t5, clip
 
 
+
 class FluxGenerator:
-    def __init__(self, model_name: str, device: str, offload: bool, aggressive_offload: bool, args):
+    def __init__(self, model_name: str, device: str, offload: bool, aggressive_offload: bool):
         self.device = torch.device(device)
         self.offload = offload
         self.aggressive_offload = aggressive_offload
@@ -58,20 +59,19 @@ class FluxGenerator:
             model_name,
             device=self.device,
             offload=self.offload,
-            fp8=args.fp8,
+            fp8=False,
         )
         self.pulid_model = PuLIDPipeline(self.model, device="cpu" if offload else device, weight_dtype=torch.bfloat16,
-                                         onnx_provider=args.onnx_provider)
+                                         onnx_provider='gpu')
 
-        if args.use_lora:
-            self.pulid_model.set_lora(None, args.lora_repo_id, args.lora_name, 0.9)
+        self.pulid_model.set_lora(None, 'ByteDance/Hyper-SD', 'Hyper-FLUX.1-dev-8steps-lora.safetensors', 0.9)
             
         if offload:
             self.pulid_model.face_helper.face_det.mean_tensor = self.pulid_model.face_helper.face_det.mean_tensor.to(torch.device("cuda"))
             self.pulid_model.face_helper.face_det.device = torch.device("cuda")
             self.pulid_model.face_helper.device = torch.device("cuda")
             self.pulid_model.device = torch.device("cuda")
-        self.pulid_model.load_pretrain(args.pretrained_model, version=args.version)
+        self.pulid_model.load_pretrain('', version='v0.9.1')
 
     @torch.inference_mode()
     def generate_image(
@@ -206,17 +206,7 @@ def initialize_pipelines():
     """Initialize the diffusion pipelines with InstantID and SDXL-Lightning - GPU optimized"""
     global generator
     try:
-        generator = FluxGenerator(model_name='flux-dev', device='cuda', offload=True, aggressive_offload=False, args={
-            'lora_repo_id': 'ByteDance/Hyper-SD',
-            'lora_name': 'Hyper-FLUX.1-dev-8steps-lora.safetensors',
-            'use_lora':True,
-            'onnx_provider': 'gpu',
-            'version':'v0.9.1',
-            'fp8':False,
-            'lora_local_path': None,
-            'lora_weight': 0.9,
-
-        })
+        generator = FluxGenerator(model_name='flux-dev', device='cuda', offload=True, aggressive_offload=False)
         
     except Exception as e:
         logger.error(f"Failed to initialize pipelines: {e}")
