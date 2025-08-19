@@ -265,7 +265,7 @@ os.makedirs(results_dir, exist_ok=True)
 
 async def gen_img2img(job_id: str, face_image : Image.Image,request: Img2ImgRequest):
     negative_prompt = f"{request.negative_prompt}, blue artifacts, color bleeding, unnatural colors, mask edges, visible seams, hair"
-    seed = request.seed if request.seed else -1
+    seed = request.seed
     gen_image, seed, _ = generator.generate_image(
         request.width,
         request.height,
@@ -355,7 +355,7 @@ async def img2img(
     negative_prompt: str = Form("(lowres, low quality, worst quality:1.2), (text:1.2), watermark, painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, ugly, disfigured"),
     num_inference_steps: int = Form(8),
     guidance_scale: float = Form(4),
-    seed: Optional[int] = Form(None),
+    seed: Optional[int] = Form(-1),
     width: int = Form(512),  # ❌ Thiếu Form()
     height: int = Form(512), # ❌ Thiếu Form()
     start_step: int = Form(0), # ❌ Thiếu Form()
