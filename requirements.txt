@@ -1,15 +1,14 @@
-torch==2.0.1
 torchvision==0.15.2
 diffusers==0.25.0
 transformers==4.43.3
-opencv-python
+accelerate==1.9.0
 timm
 einops
 ftfy
 facexlib
 insightface
-onnxruntime
-onnxruntime-gpu
+onnxruntime==1.22.0
+onnxruntime-gpu==1.22.0
 accelerate
 SentencePiece
 safetensors
@@ -17,3 +16,6 @@ torchsde
 fastapi
 python-multipart
 uvicorn
+opencv-contrib-python==4.11.0.86
+opencv-python-headless==4.11.0.86
+numpy==1.26.4
