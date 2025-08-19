@@ -65,7 +65,7 @@ class FluxGenerator:
         self.pulid_model = PuLIDPipeline(self.model, device="cpu" if offload else device, weight_dtype=torch.bfloat16,
                                          onnx_provider='gpu')
 
-        self.pulid_model.set_lora(None, 'ByteDance/Hyper-SD', 'Hyper-FLUX.1-dev-8steps-lora.safetensors', 0.9)
+        self.pulid_model.set_lora(None, 'alimama-creative/FLUX.1-Turbo-Alpha', 'diffusion_pytorch_model.safetensors', 1)
             
         if offload:
             self.pulid_model.face_helper.face_det.mean_tensor = self.pulid_model.face_helper.face_det.mean_tensor.to(torch.device("cuda"))

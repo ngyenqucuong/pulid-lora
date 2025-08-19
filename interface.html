@@ -153,9 +153,9 @@
                     </div>
                     <div>
                         <label class="block text-white font-medium mb-2">Num Step</label>
-                        <input type="range" id="numStep" min="0" max="20" step="1" value="20" 
+                        <input type="range" id="numStep" min="0" max="20" step="1" value="8" 
                                class="w-full" oninput="document.getElementById('numStepValue').textContent = this.value">
-                        <span id="numStepValue" class="text-white text-sm">20</span>
+                        <span id="numStepValue" class="text-white text-sm">8</span>
                     </div>
                     <div>
                         <label class="block text-white font-medium mb-2">Step to start insert Face Identify</label>
@@ -351,7 +351,15 @@
                 </div>
             `;
             
-            resultsContainer.appendChild(resultCard);
+            // Insert at the beginning
+            resultsContainer.insertBefore(resultCard, resultsContainer.firstChild);
+            
+            // Remove excess results (keep only 4 max)
+            const resultCards = resultsContainer.querySelectorAll('.result-card');
+            if (resultCards.length > 4) {
+                // Remove the last (oldest) result card
+                resultCards[resultCards.length - 1].remove();
+            }
         }
         
         function downloadImage(url, filename) {

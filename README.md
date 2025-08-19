@@ -13,7 +13,7 @@ if args.use_lora:
 ```
 
 ## Quick Inference
-
+pip install -U "huggingface_hub[cli]"
 ### Single Image Demo
 ```python
 python run_flux.py --use_lora --lora_repo_id repo_id --lora_name lora-name.safetensors
