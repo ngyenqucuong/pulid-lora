@@ -226,15 +226,6 @@
         const basePreview = document.getElementById('baseImagePreview');
         const basePlaceholder = document.getElementById('baseImagePlaceholder');
         const baseImg = document.getElementById('baseImageImg');
-        const poseInput = document.getElementById('poseImage');
-        const posePreview = document.getElementById('poseImagePreview');
-        const posePlaceholder = document.getElementById('poseImagePlaceholder');
-        const poseImg = document.getElementById('poseImageImg');
-        const maskInput = document.getElementById('maskImage');
-        const maskPreview = document.getElementById('maskImagePreview');
-
-        const maskPlaceholder = document.getElementById('maskImagePlaceholder');
-        const maskImg = document.getElementById('maskImageImg');
 
         baseInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -248,30 +239,7 @@
                 reader.readAsDataURL(file);
             }
         });
-        poseInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    poseImg.src = e.target.result;
-                    posePreview.classList.remove('hidden');
-                    posePlaceholder.classList.add('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        maskInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    maskImg.src = e.target.result;
-                    maskPreview.classList.remove('hidden');
-                    maskPlaceholder.classList.add('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        
         
         // Generate button event listener
         document.getElementById('generateBtn').addEventListener('click', async () => {
