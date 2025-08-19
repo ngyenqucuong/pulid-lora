@@ -205,9 +205,8 @@ logger = logging.getLogger(__name__)
 def initialize_pipelines():
     """Initialize the diffusion pipelines with InstantID and SDXL-Lightning - GPU optimized"""
     global generator
-    
     try:
-        generator = FluxGenerator('flux-dev', 'cuda', True, False, args={
+        generator = FluxGenerator(model_name='flux-dev', device='cuda', offload=True, aggressive_offload=False, args={
             'lora_repo_id': 'ByteDance/Hyper-SD',
             'lora_name': 'Hyper-FLUX.1-dev-8steps-lora.safetensors',
             'use_lora':True,
