@@ -353,8 +353,8 @@ async def img2img(
     base_image: UploadFile = File(...),
     prompt: str = Form(""),
     negative_prompt: str = Form("(lowres, low quality, worst quality:1.2), (text:1.2), watermark, painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, ugly, disfigured"),
-    num_inference_steps: int = Form(50),  # Number of inference steps
-    guidance_scale: float = Form(0),  # Zero for LCM
+    num_inference_steps: int = Form(8),  # Number of inference steps
+    guidance_scale: float = Form(4),  # Zero for LCM
     seed: Optional[int] = Form(None),
     width: int = 512,
     height: int = 512,
