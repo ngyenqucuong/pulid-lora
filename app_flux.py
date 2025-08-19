@@ -33,7 +33,8 @@ import os
 import json
 import uvicorn
 import uuid
-import io
+import cv2
+import numpy
 
 
 def get_models(name: str, device: torch.device, offload: bool, fp8: bool):
@@ -376,7 +377,7 @@ async def img2img(
     logger.info(f"Received img2img request with job_id: {job_id}")
     try:
     # Load images
-        base_img = Image.open(io.BytesIO(await base_image.read())).resize((256, 256))
+        base_img = cv2.imdecode(numpy.frombuffer(await base_image.read(), numpy.uint8), cv2.IMREAD_COLOR)
         request = Img2ImgRequest(
 
             prompt=prompt,
