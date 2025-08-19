@@ -65,7 +65,7 @@ class FluxGenerator:
         self.pulid_model = PuLIDPipeline(self.model, device="cpu" if offload else device, weight_dtype=torch.bfloat16,
                                          onnx_provider='gpu')
 
-        self.pulid_model.set_lora(None, 'alimama-creative/FLUX.1-Turbo-Alpha', 'diffusion_pytorch_model.safetensors', 1)
+        # self.pulid_model.set_lora(None, 'alimama-creative/FLUX.1-Turbo-Alpha', 'diffusion_pytorch_model.safetensors', 1)
             
         if offload:
             self.pulid_model.face_helper.face_det.mean_tensor = self.pulid_model.face_helper.face_det.mean_tensor.to(torch.device("cuda"))
@@ -207,7 +207,7 @@ def initialize_pipelines():
     """Initialize the diffusion pipelines with InstantID and SDXL-Lightning - GPU optimized"""
     global generator
     try:
-        generator = FluxGenerator(model_name='flux-dev', device='cuda', offload=True, aggressive_offload=False)
+        generator = FluxGenerator(model_name='flux-schnell', device='cuda', offload=True, aggressive_offload=False)
         
     except Exception as e:
         logger.error(f"Failed to initialize pipelines: {e}")
