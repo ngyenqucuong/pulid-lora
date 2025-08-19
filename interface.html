@@ -169,10 +169,10 @@
 
                 <!-- Seed -->
                 <div class="mt-4">
-                    <label class="block text-white font-medium mb-2">Seed (0 for random)</label>
+                    <label class="block text-white font-medium mb-2">Seed (-1 for random)</label>
                     <input type="number" id="generateSeed" 
                            class="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-gray-300 border border-gray-300 border-opacity-30" 
-                           value="0" placeholder="Random seed (0 for random)">
+                           value="-1" placeholder="Random seed (-1 for random)">
                 </div>
 
                 <!-- Generate Button -->
@@ -271,7 +271,7 @@
 
 
             const seedValue = document.getElementById('generateSeed').value;
-            if (seedValue && seedValue !== '0') {
+            if (seedValue && seedValue !== '-1') {
                 formData.append('seed', seedValue);
             }
             

@@ -375,6 +375,7 @@ async def img2img(
         "created_at": datetime.now(),
         "type": "head_swap"
     }
+    logger.info(f"Received img2img request with job_id: {job_id}")
     try:
     # Load images
         base_img = Image.open(io.BytesIO(await base_image.read())).resize((256, 256))
