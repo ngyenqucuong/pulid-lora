@@ -353,18 +353,16 @@ async def img2img(
     base_image: UploadFile = File(...),
     prompt: str = Form(""),
     negative_prompt: str = Form("(lowres, low quality, worst quality:1.2), (text:1.2), watermark, painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, ugly, disfigured"),
-    num_inference_steps: int = Form(8),  # Number of inference steps
-    guidance_scale: float = Form(4),  # Zero for LCM
+    num_inference_steps: int = Form(8),
+    guidance_scale: float = Form(4),
     seed: Optional[int] = Form(None),
-    width: int = 512,
-    height: int = 512,
-    start_step: int = 0,
-    id_weight: float = 1.0,
-    true_cfg: Optional[dict] = None,
-    timestep_to_start_cfg: Optional[int] = None,
-    max_sequence_length: Optional[int] = None
-    
-    
+    width: int = Form(512),  # ❌ Thiếu Form()
+    height: int = Form(512), # ❌ Thiếu Form()
+    start_step: int = Form(0), # ❌ Thiếu Form()
+    id_weight: float = Form(1.0), # ❌ Thiếu Form()
+    true_cfg: Optional[float] = Form(None),  # ✅ Đổi từ dict thành float
+    timestep_to_start_cfg: Optional[int] = Form(None),  # ✅ Thêm Form()
+    max_sequence_length: Optional[int] = Form(None)     # ✅ Thêm Form()
 ):
     job_id = str(uuid.uuid4())
     
