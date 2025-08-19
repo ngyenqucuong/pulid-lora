@@ -64,7 +64,7 @@ class FluxGenerator:
                                          onnx_provider=args.onnx_provider)
 
         if args.use_lora:
-            self.pulid_model.set_lora(args.lora_local_path, args.lora_repo_id, args.lora_name, args.lora_weight)
+            self.pulid_model.set_lora(None, args.lora_repo_id, args.lora_name, 0.9)
             
         if offload:
             self.pulid_model.face_helper.face_det.mean_tensor = self.pulid_model.face_helper.face_det.mean_tensor.to(torch.device("cuda"))
@@ -212,7 +212,11 @@ def initialize_pipelines():
             'lora_name': 'Hyper-FLUX.1-dev-8steps-lora.safetensors',
             'use_lora':True,
             'onnx_provider': 'gpu',
-            'version':'v0.9.1'
+            'version':'v0.9.1',
+            'fp8':False,
+            'lora_local_path': None,
+            'lora_weight': 0.9,
+
         })
         
     except Exception as e:
