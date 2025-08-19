@@ -118,7 +118,7 @@ configs = {
             qkv_bias=True,
             guidance_embed=False,
         ),
-        ae_path=os.getenv("AE"),
+        ae_path='models/schnell-ae.safetensors',
         ae_params=AutoEncoderParams(
             resolution=256,
             in_channels=3,
