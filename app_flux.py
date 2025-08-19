@@ -245,7 +245,7 @@ class Img2ImgRequest(BaseModel):
     height: int = 512
     start_step: int = 0
     id_weight: float = 1.0
-    true_cfg: Optional[dict] = None
+    true_cfg: Optional[float] = 1.0
     timestep_to_start_cfg: Optional[int] = None
     max_sequence_length: Optional[int] = None
 
