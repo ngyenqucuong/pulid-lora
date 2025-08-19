@@ -71,7 +71,7 @@ class FluxGenerator:
             self.pulid_model.face_helper.face_det.device = torch.device("cuda")
             self.pulid_model.face_helper.device = torch.device("cuda")
             self.pulid_model.device = torch.device("cuda")
-        self.pulid_model.load_pretrain('', version='v0.9.1')
+        self.pulid_model.load_pretrain(None, version='v0.9.1')
 
     @torch.inference_mode()
     def generate_image(
