@@ -246,22 +246,22 @@ results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
 
 async def gen_img2img(job_id: str, face_image : Image.Image,request: Img2ImgRequest):
-    negative_prompt = f"{request.negative_prompt}, blue artifacts, color bleeding, unnatural colors, mask edges, visible seams, hair"
+    negative_prompt = f"{request.negative_prompt}, bad quality, worst quality, text, signature, watermark, extra limbs"
     seed = request.seed
     gen_image, seed, _ = flux_generator.generate_image(
-        request.width,
-        request.height,
-        request.num_inference_steps,
-        request.start_step,
-        request.guidance_scale,
-        request.seed,
-        request.prompt,
-        face_image,
-        request.id_weight,
-        negative_prompt,
-        request.true_cfg,
-        request.timestep_to_start_cfg,
-        request.max_sequence_length
+        prompt = request.prompt,
+        id_image = face_image,
+        start_step = request.start_step,
+        guidance = request.guidance_scale,
+        seed = seed,
+        true_cfg = request.true_cfg,
+        width = request.width,
+        height = request.height,
+        num_steps = request.num_inference_steps,
+        id_weight = request.id_weight,
+        neg_prompt = negative_prompt,
+        timestep_to_start_cfg = request.timestep_to_start_cfg,
+        max_sequence_length = request.max_sequence_length
     )
     
 
