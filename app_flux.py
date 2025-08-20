@@ -11,7 +11,6 @@ from flux.util import (
     load_ae,
     load_clip,
     load_flow_model,
-    load_flow_model_quintized,
     load_t5,
 )
 from pulid.pipeline_flux import PuLIDPipeline
@@ -36,61 +35,48 @@ import uuid
 import cv2
 import numpy
 
+NSFW_THRESHOLD = 0.85
 
-def get_models(name: str, device: torch.device, offload: bool, fp8: bool):
+
+def get_models(name: str, device: torch.device, offload: bool):
     t5 = load_t5(device, max_length=128)
     clip = load_clip(device)
-    if fp8:
-        model = load_flow_model_quintized(name, device="cpu" if offload else device)
-    else:
-        model = load_flow_model(name, device="cpu" if offload else device)
+    model = load_flow_model(name, device="cpu" if offload else device)
     model.eval()
     ae = load_ae(name, device="cpu" if offload else device)
     return model, ae, t5, clip
 
 
-
 class FluxGenerator:
-    def __init__(self, model_name: str, device: str, offload: bool, aggressive_offload: bool):
-        self.device = torch.device(device)
-        self.offload = offload
-        self.aggressive_offload = aggressive_offload
-        self.model_name = model_name
+    def __init__(self):
+        self.device = torch.device('cuda')
+        self.offload = False
+        self.model_name = 'flux-krea-dev'
         self.model, self.ae, self.t5, self.clip = get_models(
-            model_name,
+            self.model_name,
             device=self.device,
             offload=self.offload,
-            fp8=False,
         )
-        self.pulid_model = PuLIDPipeline(self.model, device="cpu" if offload else device, weight_dtype=torch.bfloat16,
-                                         onnx_provider='gpu')
-
-        # self.pulid_model.set_lora(None, 'alimama-creative/FLUX.1-Turbo-Alpha', 'diffusion_pytorch_model.safetensors', 1)
-            
-        if offload:
-            self.pulid_model.face_helper.face_det.mean_tensor = self.pulid_model.face_helper.face_det.mean_tensor.to(torch.device("cuda"))
-            self.pulid_model.face_helper.face_det.device = torch.device("cuda")
-            self.pulid_model.face_helper.device = torch.device("cuda")
-            self.pulid_model.device = torch.device("cuda")
-        self.pulid_model.load_pretrain(None, version='v0.9.1')
-
+        self.pulid_model = PuLIDPipeline(self.model, 'cuda', weight_dtype=torch.bfloat16)
+        self.pulid_model.load_pretrain()
+    
     @torch.inference_mode()
     def generate_image(
-            self,
-            width,
-            height,
-            num_steps,
-            start_step,
-            guidance,
-            seed,
-            prompt,
-            id_image=None,
-            id_weight=1.0,
-            neg_prompt="",
-            true_cfg=1.0,
-            timestep_to_start_cfg=1,
-            max_sequence_length=128,
-    ):
+        self,
+        prompt,
+        id_image,
+        start_step,
+        guidance,
+        seed,
+        true_cfg,
+        width=896,
+        height=1152,
+        num_steps=20,
+        id_weight=1.0,
+        neg_prompt="bad quality, worst quality, text, signature, watermark, extra limbs",
+        timestep_to_start_cfg=1,
+        max_sequence_length=128,
+):
         self.t5.max_length = max_sequence_length
 
         seed = int(seed)
@@ -113,6 +99,14 @@ class FluxGenerator:
 
         use_true_cfg = abs(true_cfg - 1.0) > 1e-2
 
+        if id_image is not None:
+            id_image = resize_numpy_image_long(id_image, 1024)
+            id_embeddings, uncond_id_embeddings = self.pulid_model.get_id_embedding(id_image, cal_uncond=use_true_cfg)
+        else:
+            id_embeddings = None
+            uncond_id_embeddings = None
+
+
         # prepare input
         x = get_noise(
             1,
@@ -133,27 +127,11 @@ class FluxGenerator:
         inp = prepare(t5=self.t5, clip=self.clip, img=x, prompt=opts.prompt)
         inp_neg = prepare(t5=self.t5, clip=self.clip, img=x, prompt=neg_prompt) if use_true_cfg else None
 
-        # offload TEs to CPU, load processor models and id encoder to gpu
+        # offload TEs to CPU, load model to gpu
         if self.offload:
             self.t5, self.clip = self.t5.cpu(), self.clip.cpu()
             torch.cuda.empty_cache()
-            self.pulid_model.components_to_device(torch.device("cuda"))
-
-        if id_image is not None:
-            id_image = resize_numpy_image_long(id_image, 1024)
-            id_embeddings, uncond_id_embeddings = self.pulid_model.get_id_embedding(id_image, cal_uncond=use_true_cfg)
-        else:
-            id_embeddings = None
-            uncond_id_embeddings = None
-
-        # offload processor models and id encoder to CPU, load dit model to gpu
-        if self.offload:
-            self.pulid_model.components_to_device(torch.device("cpu"))
-            torch.cuda.empty_cache()
-            if self.aggressive_offload:
-                self.model.components_to_gpu()
-            else:
-                self.model = self.model.to(self.device)
+            self.model = self.model.to(self.device)
 
         # denoise initial noise
         x = denoise(
@@ -163,7 +141,6 @@ class FluxGenerator:
             neg_txt=inp_neg["txt"] if use_true_cfg else None,
             neg_txt_ids=inp_neg["txt_ids"] if use_true_cfg else None,
             neg_vec=inp_neg["vec"] if use_true_cfg else None,
-            aggressive_offload=self.aggressive_offload,
         )
 
         # offload model, load autoencoder to gpu
@@ -190,28 +167,32 @@ class FluxGenerator:
         x = rearrange(x[0], "c h w -> h w c")
 
         img = Image.fromarray((127.5 * (x + 1.0)).cpu().byte().numpy())
+
         return img, str(opts.seed), self.pulid_model.debug_img_list
 
 
-
-
-
-
-
-generator = None
+flux_generator = None
 executor = ThreadPoolExecutor(max_workers=1)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def initialize_pipelines():
     """Initialize the diffusion pipelines with InstantID and SDXL-Lightning - GPU optimized"""
-    global generator
+    global flux_generator
     try:
-        generator = FluxGenerator(model_name='flux-schnell', device='cuda', offload=True, aggressive_offload=False)
-        
+        flux_generator = FluxGenerator()
+
     except Exception as e:
         logger.error(f"Failed to initialize pipelines: {e}")
         raise
+
+
+
+
+@torch.inference_mode()
+
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -267,7 +248,7 @@ os.makedirs(results_dir, exist_ok=True)
 async def gen_img2img(job_id: str, face_image : Image.Image,request: Img2ImgRequest):
     negative_prompt = f"{request.negative_prompt}, blue artifacts, color bleeding, unnatural colors, mask edges, visible seams, hair"
     seed = request.seed
-    gen_image, seed, _ = generator.generate_image(
+    gen_image, seed, _ = flux_generator.generate_image(
         request.width,
         request.height,
         request.num_inference_steps,

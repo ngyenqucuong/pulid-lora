@@ -5,210 +5,376 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SDXL Face Swap Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'glass-bg': 'rgba(255, 255, 255, 0.25)',
+                        'glass-border': 'rgba(255, 255, 255, 0.18)',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
-        .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
         }
-        .upload-area {
-            border: 2px dashed #cbd5e0;
+        
+        .glass-card-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.2);
+        }
+        
+        .upload-zone {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .upload-zone:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .input-glass {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
+            color: #1a202c;
+        }
+        
+        .input-glass:focus {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .input-glass::placeholder {
+            color: rgba(31, 41, 55, 0.6);
+        }
+        
+        .slider-modern {
+            appearance: none;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .slider-modern::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.6);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #1a202c;
+            font-weight: 500;
             transition: all 0.3s ease;
         }
-        .upload-area:hover {
-            border-color: #4299e1;
-            background-color: rgba(66, 153, 225, 0.1);
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
         }
-        .upload-area.dragover {
-            border-color: #3182ce;
-            background-color: rgba(49, 130, 206, 0.2);
-        }
-        .progress-bar {
-            background: linear-gradient(90deg, #4299e1, #3182ce);
+        
+        .progress-modern {
+            background: rgba(255, 255, 255, 0.3);
             border-radius: 10px;
             height: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-modern {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            border-radius: 10px;
             transition: width 0.3s ease;
         }
+        
         .result-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            transition: all 0.3s ease;
             transform: translateY(20px);
             opacity: 0;
-            animation: slideUp 0.5s ease forwards;
+            animation: slideInUp 0.5s ease forwards;
         }
-        @keyframes slideUp {
+        
+        .result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(31, 38, 135, 0.3);
+        }
+        
+        @keyframes slideInUp {
             to {
                 transform: translateY(0);
                 opacity: 1;
             }
         }
+        
         .loading-spinner {
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid #4299e1;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #667eea;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
             animation: spin 1s linear infinite;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .section-title {
+            color: #1a202c;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .label-modern {
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .value-display {
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+        
+        .header-card {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.4);
+        }
     </style>
 </head>
-<body class="p-4">
-    <div class="max-w-6xl mx-auto">
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="glass p-6 mb-6">
-            <h1 class="text-4xl font-bold text-white text-center mb-2">
+        <div class="header-card p-8 mb-8 text-center">
+            <h1 class="text-5xl font-bold text-gray-800 mb-3">
                 🎭 SDXL Face Swap Studio
             </h1>
-            <p class="text-white text-center opacity-80">
-                Generate images with AI and swap faces using InstantID technology
+            <p class="text-gray-600 text-lg font-medium">
+                Generate stunning AI images with advanced face swapping technology
             </p>
         </div>
 
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Left Panel - Controls -->
-            <div class="glass p-6">
-                <h3 class="text-xl font-semibold text-white mb-4">Image to Image</h3>
-                
-                <!-- File Upload -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-white font-medium mb-2">Base Image</label>
-                        <div class="upload-area p-6 text-center cursor-pointer" onclick="document.getElementById('baseImage').click()">
-                            <input type="file" id="baseImage" accept="image/*" class="hidden">
-                            <div id="baseImagePreview" class="hidden">
-                                <img id="baseImageImg" class="max-w-full h-32 object-cover rounded-lg mx-auto">
+        <!-- Main Dashboard -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <!-- Controls Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Image Upload Card -->
+                <div class="glass-card p-6">
+                    <h3 class="section-title">📷 Image Upload</h3>
+                    <div class="upload-zone p-8 text-center cursor-pointer" onclick="document.getElementById('baseImage').click()">
+                        <input type="file" id="baseImage" accept="image/*" class="hidden">
+                        <div id="baseImagePreview" class="hidden">
+                            <img id="baseImageImg" class="max-w-full h-40 object-cover rounded-xl mx-auto shadow-lg">
+                        </div>
+                        <div id="baseImagePlaceholder" class="space-y-3">
+                            <div class="text-6xl">📸</div>
+                            <div class="text-gray-700 font-semibold">Click to upload your base image</div>
+                            <div class="text-gray-500 text-sm">Supports JPG, PNG, WebP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prompt Card -->
+                <div class="glass-card p-6">
+                    <h3 class="section-title">✨ Creative Prompt</h3>
+                    <textarea id="Prompt" 
+                            class="w-full p-4 input-glass text-gray-800 placeholder-gray-500"
+                            rows="3" 
+                            placeholder="Describe your vision: natural head with hair, detailed hairstyle, photorealistic portrait..."></textarea>
+                </div>
+
+                <!-- Parameters Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- AI Settings -->
+                    <div class="glass-card p-6">
+                        <h3 class="section-title">🤖 AI Settings</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block label-modern">Sequence Length</label>
+                                <input type="range" id="maxSequenceLength" min="128" max="512" step="128" value="128" 
+                                       class="w-full slider-modern" oninput="document.getElementById('maxSequenceLengthValue').textContent = this.value">
+                                <div class="flex justify-between mt-2">
+                                    <span class="value-display">Fast</span>
+                                    <span id="maxSequenceLengthValue" class="value-display font-semibold">128</span>
+                                    <span class="value-display">Quality</span>
+                                </div>
                             </div>
-                            <div id="baseImagePlaceholder">
-                                <p class="text-white">📷 Click to upload base image</p>
+                            
+                            <div>
+                                <label class="block label-modern">ID Weight</label>
+                                <input type="range" id="idWeightScale" min="0" max="3" step="0.05" value="1" 
+                                       class="w-full slider-modern" oninput="document.getElementById('idWeightScaleValue').textContent = this.value">
+                                <div class="flex justify-between mt-2">
+                                    <span class="value-display">Low</span>
+                                    <span id="idWeightScaleValue" class="value-display font-semibold">1</span>
+                                    <span class="value-display">High</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generation Settings -->
+                    <div class="glass-card p-6">
+                        <h3 class="section-title">⚙️ Generation</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block label-modern">CFG Scale</label>
+                                <input type="range" id="cfgScale" min="1" max="10" step="0.1" value="1" 
+                                       class="w-full slider-modern" oninput="document.getElementById('cfgScaleValue').textContent = this.value">
+                                <span id="cfgScaleValue" class="value-display font-semibold">1</span>
+                            </div>
+                            
+                            <div>
+                                <label class="block label-modern">Timestep CFG</label>
+                                <input type="range" id="timestepToStartCfg" min="1" max="10" step="0.1" value="1" 
+                                       class="w-full slider-modern" oninput="document.getElementById('timestepToStartCfgValue').textContent = this.value">
+                                <span id="timestepToStartCfgValue" class="value-display font-semibold">1</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Prompt -->
-                <div class="mt-4">
-                    <label class="block text-white font-medium mb-2">Prompt</label>
-                    <textarea id="Prompt" 
-                            class="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-gray-300 border border-gray-300 border-opacity-30"
-                            rows="2" 
-                            placeholder="natural head with hair, detailed hairstyle, photorealistic portrait"></textarea>
-                </div>
-
-                <!-- Parameters -->
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                        <label class="block text-white font-medium mb-2">max_sequence_length for prompt (T5), small will be faster</label>
-                        <input type="range" id="maxSequenceLength" min="128" max="512" step="128" value="128" 
-                               class="w-full" oninput="document.getElementById('maxSequenceLengthValue').textContent = this.value">
-                        <span id="maxSequenceLengthValue" class="text-white text-sm">128</span>
-                    </div>
-                    <div>
-                        <label class="block text-white font-medium mb-2">ID Weight (The similar of result with the input image)</label>
-                        <input type="range" id="idWeightScale" min="0" max="3" step="0.05" value="1" 
-                               class="w-full" oninput="document.getElementById('idWeightScaleValue').textContent = this.value">
-                        <span id="idWeightScaleValue" class="text-white text-sm">1</span>
-                    </div>
-                    <div>
-                        <label class="block text-white font-medium mb-2">CFG scale</label>
-                        <input type="range" id="cfgScale" min="1" max="10" step="0.1" value="1" 
-                               class="w-full" oninput="document.getElementById('cfgScaleValue').textContent = this.value">
-                        <span id="cfgScaleValue" class="text-white text-sm">1</span>
-                    </div>
-                    <div>
-                        <label class="block text-white font-medium mb-2">timestep to start cfg</label>
-                        <input type="range" id="timestepToStartCfg" min="1" max="10" step="0.1" value="1" 
-                               class="w-full" oninput="document.getElementById('timestepToStartCfgValue').textContent = this.value">
-                        <span id="timestepToStartCfgValue" class="text-white text-sm">1</span>
-                    </div>
-                </div>
-
-                <!-- Additional Parameters -->
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                        <label class="block text-white font-medium mb-2">Width</label>
-                        <input type="range" id="width" min="256" max="1536" step="16" value="896" 
-                               class="w-full" oninput="document.getElementById('widthValue').textContent = this.value">
-                        <span id="widthValue" class="text-white text-sm">896</span> 
-                    </div>
-                    <div>
-                        <label class="block text-white font-medium mb-2">Height</label>
-                        <input type="range" id="height" min="256" max="1536" step="16" value="1152" 
-                               class="w-full" oninput="document.getElementById('heightValue').textContent = this.value">
-                        <span id="heightValue" class="text-white text-sm">1152</span>
-                    </div>
-                    <div>
-                        <label class="block text-white font-medium mb-2">Guidance Scale</label>
-                        <input type="range" id="guidanceScale" min="1" max="10" step="0.1" value="4" 
-                               class="w-full" oninput="document.getElementById('guidanceScaleValue').textContent = this.value">
-                        <span id="guidanceScaleValue" class="text-white text-sm">4</span>
-                    </div>
-                    <div>
-                        <label class="block text-white font-medium mb-2">Num Step</label>
-                        <input type="range" id="numStep" min="0" max="20" step="1" value="8" 
-                               class="w-full" oninput="document.getElementById('numStepValue').textContent = this.value">
-                        <span id="numStepValue" class="text-white text-sm">8</span>
-                    </div>
-                    <div>
-                        <label class="block text-white font-medium mb-2">Step to start insert Face Identify</label>
-                        <input type="range" id="startStep" min="0" max="10" step="1" value="0" 
-                               class="w-full" oninput="document.getElementById('startStepValue').textContent = this.value">
-                        <span id="startStepValue" class="text-white text-sm">0</span>
+                <!-- Advanced Settings -->
+                <div class="glass-card p-6">
+                    <h3 class="section-title">🎛️ Advanced Controls</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block label-modern">Width</label>
+                            <input type="range" id="width" min="256" max="1536" step="16" value="896" 
+                                   class="w-full slider-modern" oninput="document.getElementById('widthValue').textContent = this.value">
+                            <span id="widthValue" class="value-display font-semibold">896</span>
+                        </div>
+                        <div>
+                            <label class="block label-modern">Height</label>
+                            <input type="range" id="height" min="256" max="1536" step="16" value="1152" 
+                                   class="w-full slider-modern" oninput="document.getElementById('heightValue').textContent = this.value">
+                            <span id="heightValue" class="value-display font-semibold">1152</span>
+                        </div>
+                        <div>
+                            <label class="block label-modern">Guidance</label>
+                            <input type="range" id="guidanceScale" min="1" max="10" step="0.1" value="4" 
+                                   class="w-full slider-modern" oninput="document.getElementById('guidanceScaleValue').textContent = this.value">
+                            <span id="guidanceScaleValue" class="value-display font-semibold">4</span>
+                        </div>
+                        <div>
+                            <label class="block label-modern">Steps</label>
+                            <input type="range" id="numStep" min="0" max="30" step="1" value="8" 
+                                   class="w-full slider-modern" oninput="document.getElementById('numStepValue').textContent = this.value">
+                            <span id="numStepValue" class="value-display font-semibold">8</span>
+                        </div>
+                        <div>
+                            <label class="block label-modern">Start Step</label>
+                            <input type="range" id="startStep" min="0" max="10" step="1" value="0" 
+                                   class="w-full slider-modern" oninput="document.getElementById('startStepValue').textContent = this.value">
+                            <span id="startStepValue" class="value-display font-semibold">0</span>
+                        </div>
+                        <div>
+                            <label class="block label-modern">Seed</label>
+                            <input type="number" id="generateSeed" 
+                                   class="w-full p-2 input-glass text-sm" 
+                                   value="-1" placeholder="-1">
+                        </div>
                     </div>
                 </div>
-                <!-- Additional Parameters -->
-                
 
-                <!-- Seed -->
-                <div class="mt-4">
-                    <label class="block text-white font-medium mb-2">Seed (-1 for random)</label>
-                    <input type="number" id="generateSeed" 
-                           class="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-gray-300 border border-gray-300 border-opacity-30" 
-                           value="-1" placeholder="Random seed (-1 for random)">
-                </div>
+                <!-- Generate Button & Progress -->
+                <div class="glass-card p-6">
+                    <button id="generateBtn" 
+                            class="w-full btn-primary py-4 px-6 text-lg font-bold">
+                        🚀 Generate Amazing Image
+                    </button>
 
-                <!-- Generate Button -->
-                <button id="generateBtn" 
-                        class="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
-                    🔄 Generate Image
-                </button>
-
-                <!-- Progress Section -->
-                <div id="progressSection" class="mt-6 hidden">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-white font-medium">Processing...</span>
-                        <div class="loading-spinner"></div>
+                    <!-- Progress Section -->
+                    <div id="progressSection" class="mt-6 hidden">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-gray-700 font-semibold">Creating your masterpiece...</span>
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <div class="progress-modern">
+                            <div id="progressBar" class="progress-bar-modern w-0"></div>
+                        </div>
+                        <div id="progressText" class="text-gray-600 text-sm mt-2 font-medium">Initializing...</div>
                     </div>
-                    <div class="w-full bg-gray-200 bg-opacity-30 rounded-full h-2">
-                        <div id="progressBar" class="progress-bar w-0"></div>
-                    </div>
-                    <div id="progressText" class="text-white text-sm mt-2">Starting...</div>
                 </div>
             </div>
 
-            <!-- Right Panel - Results -->
-            <div class="glass p-6">
-                <h3 class="text-xl font-semibold text-white mb-4">Results</h3>
-                
-                <div id="resultsContainer" class="space-y-4">
-                    <div id="noResults" class="text-center text-white opacity-60 py-12">
-                        <div class="text-6xl mb-4">🎨</div>
-                        <p>Your generated images will appear here</p>
+            <!-- Results Panel -->
+            <div class="xl:col-span-1 space-y-6">
+                <!-- Results Card -->
+                <div class="glass-card p-6 h-fit">
+                    <h3 class="section-title">🎨 Your Creations</h3>
+                    
+                    <div id="resultsContainer" class="space-y-4">
+                        <div id="noResults" class="text-center py-12">
+                            <div class="text-6xl mb-4 opacity-60">🖼️</div>
+                            <p class="text-gray-600 font-medium">Your masterpieces will appear here</p>
+                            <p class="text-gray-500 text-sm mt-2">Upload an image and start creating!</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Job History -->
-                <div class="mt-8">
-                    <h4 class="text-lg font-semibold text-white mb-4">Recent Jobs</h4>
-                    <div id="jobHistory" class="space-y-2 max-h-64 overflow-y-auto">
+                <!-- Job History Card -->
+                <div class="glass-card p-6">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">📋 Recent Jobs</h4>
+                    <div id="jobHistory" class="space-y-3 max-h-64 overflow-y-auto">
                         <!-- Jobs will be populated here -->
                     </div>
                 </div>
@@ -217,7 +383,6 @@
     </div>
 
     <script>
-        
         // Global state
         let currentJobs = new Set();
         
@@ -239,7 +404,6 @@
                 reader.readAsDataURL(file);
             }
         });
-        
         
         // Generate button event listener
         document.getElementById('generateBtn').addEventListener('click', async () => {
@@ -267,8 +431,6 @@
             formData.append('guidance_scale', document.getElementById('guidanceScale').value);
             formData.append('start_step', document.getElementById('startStep').value);
             formData.append('id_weight', document.getElementById('idWeightScale').value);
-
-
 
             const seedValue = document.getElementById('generateSeed').value;
             if (seedValue && seedValue !== '-1') {
@@ -335,17 +497,17 @@
         function addResult(imageUrl, jobId, seedValue) {
             const resultsContainer = document.getElementById('resultsContainer');
             const resultCard = document.createElement('div');
-            resultCard.className = 'result-card bg-white bg-opacity-10 rounded-lg p-4';
+            resultCard.className = 'result-card p-4';
             resultCard.innerHTML = `
-                <img src="${imageUrl}" alt="Generated Image" class="w-full rounded-lg mb-3">
-                <div class="text-white text-sm mb-2">Seed: ${seedValue}</div>
-                <div class="flex space-x-2">
+                <img src="${imageUrl}" alt="Generated Image" class="w-full rounded-xl mb-4 shadow-lg">
+                <div class="text-gray-700 text-sm mb-3 font-medium">Seed: ${seedValue}</div>
+                <div class="grid grid-cols-2 gap-2">
                     <button onclick="downloadImage('${imageUrl}', 'result_${jobId}.png')" 
-                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm">
+                            class="btn-secondary py-2 px-3 text-sm">
                         📥 Download
                     </button>
                     <button onclick="useAsBase('${imageUrl}')" 
-                            class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg text-sm">
+                            class="btn-secondary py-2 px-3 text-sm">
                         🔄 Use as Base
                     </button>
                 </div>
@@ -357,7 +519,6 @@
             // Remove excess results (keep only 4 max)
             const resultCards = resultsContainer.querySelectorAll('.result-card');
             if (resultCards.length > 4) {
-                // Remove the last (oldest) result card
                 resultCards[resultCards.length - 1].remove();
             }
         }
@@ -372,7 +533,6 @@
         }
         
         function useAsBase(imageUrl) {
-            // Convert the result image to be used as base image
             fetch(imageUrl)
                 .then(response => response.blob())
                 .then(blob => {
@@ -407,13 +567,13 @@
                 }
                 
                 if (jobs.length === 0) {
-                    jobHistory.innerHTML = '<div class="text-white text-center opacity-60">No jobs yet</div>';
+                    jobHistory.innerHTML = '<div class="text-gray-500 text-center py-4">No jobs yet</div>';
                     return;
                 }
                 
                 jobs.forEach(job => {
                     const jobElement = document.createElement('div');
-                    jobElement.className = 'bg-white bg-opacity-10 rounded-lg p-3';
+                    jobElement.className = 'glass-card-secondary p-3';
                     
                     const jobId = job.job_id || job.id || 'Unknown';
                     const status = job.status || 'Unknown';
@@ -422,10 +582,10 @@
                     jobElement.innerHTML = `
                         <div class="flex justify-between items-center">
                             <div>
-                                <div class="text-white font-medium">${jobId.toString().substr(0, 8)}...</div>
-                                <div class="text-white text-sm opacity-60">${status}</div>
+                                <div class="text-gray-800 font-semibold text-sm">${jobId.toString().substr(0, 8)}...</div>
+                                <div class="text-gray-600 text-xs">${status}</div>
                             </div>
-                            <div class="text-white text-sm">
+                            <div class="text-gray-500 text-xs">
                                 ${new Date(createdAt).toLocaleTimeString()}
                             </div>
                         </div>
@@ -435,7 +595,7 @@
             } catch (error) {
                 console.error('Failed to update job history:', error);
                 const jobHistory = document.getElementById('jobHistory');
-                jobHistory.innerHTML = '<div class="text-white text-center opacity-60">Failed to load job history</div>';
+                jobHistory.innerHTML = '<div class="text-gray-500 text-center py-4">Failed to load history</div>';
             }
         }
         
