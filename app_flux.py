@@ -325,7 +325,7 @@ async def health_check():
     return {
         "status": "healthy",
         "cuda_available": torch.cuda.is_available(),
-        "pipelines_loaded": generator is not None,
+        "pipelines_loaded": flux_generator is not None,
         "gpu_info": gpu_info
     }
 
