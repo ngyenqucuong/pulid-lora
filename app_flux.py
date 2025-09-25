@@ -59,7 +59,7 @@ class FluxGenerator:
         )
         self.pulid_model = PuLIDPipeline(self.model, 'cuda', weight_dtype=torch.bfloat16)
         self.pulid_model.set_lora(local_path='models/checkpoints/Eldritch_Comics_for_Flux_1.1.safetensors',repo_id=None, name =None, lora_weight=1)
-        # self.pulid_model.load_pretrain()
+        self.pulid_model.load_pretrain()
     
     @torch.inference_mode()
     def generate_image(
