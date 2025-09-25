@@ -51,14 +51,15 @@ class FluxGenerator:
     def __init__(self):
         self.device = torch.device('cuda')
         self.offload = True
-        self.model_name = 'flux-krea-dev'
+        self.model_name = 'flux-dev'
         self.model, self.ae, self.t5, self.clip = get_models(
             self.model_name,
             device=self.device,
             offload=self.offload,
         )
         self.pulid_model = PuLIDPipeline(self.model, 'cuda', weight_dtype=torch.bfloat16)
-        self.pulid_model.load_pretrain()
+        self.pulid_model.set_lora(local_path='models/loras/Eldritch_Comics_for_Flux_1.1.safetensors',repo_id=None, name =None, lora_weight=1)
+        # self.pulid_model.load_pretrain()
     
     @torch.inference_mode()
     def generate_image(
