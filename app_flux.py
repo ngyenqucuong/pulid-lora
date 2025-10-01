@@ -58,7 +58,10 @@ class FluxGenerator:
             offload=self.offload,
         )
         self.pulid_model = PuLIDPipeline(self.model, 'cuda', weight_dtype=torch.bfloat16)
-        self.pulid_model.set_lora(local_path='models/checkpoints/Eldritch_Comics_for_Flux_1.1.safetensors',repo_id=None, name =None, lora_weight=1)
+        self.pulid_model.set_lora(local_path='models/loras/Eldritch_Comics_for_Flux_1.1.safetensors',repo_id=None, name =None, lora_weight=0.9)
+        self.pulid_model.set_lora(local_path='models/loras/jeanClaude_Mzires_Style_FLUX-000001.safetensors',repo_id=None, name =None, lora_weight=0.5)
+        self.pulid_model.set_lora(local_path='models/loras/Ev_Ganin.safetensors',repo_id=None, name =None, lora_weight=0.65)
+        self.pulid_model.set_lora(local_path='models/loras/Flux.1_Turbo_Detailer.safetensors',repo_id=None, name =None, lora_weight=0.71)
         self.pulid_model.load_pretrain()
     
     @torch.inference_mode()
