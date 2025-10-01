@@ -62,6 +62,7 @@ class FluxGenerator:
         self.pulid_model.set_lora(local_path='models/loras/jeanClaude_Mzires_Style_FLUX-000001.safetensors',repo_id=None, name =None, lora_weight=0.5)
         self.pulid_model.set_lora(local_path='models/loras/Ev_Ganin.safetensors',repo_id=None, name =None, lora_weight=0.65)
         self.pulid_model.set_lora(local_path='models/loras/Flux.1_Turbo_Detailer.safetensors',repo_id=None, name =None, lora_weight=0.71)
+        self.pulid_model.set_lora(local_path='models/loras/Hand v2.safetensors',repo_id=None, name =None, lora_weight=1.0)
         self.pulid_model.load_pretrain()
     
     @torch.inference_mode()
