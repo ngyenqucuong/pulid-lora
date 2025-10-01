@@ -20,6 +20,9 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
+from transformers import AutoModelForImageSegmentation
+from torchvision import transforms
+
 import logging
 
 from pydantic import BaseModel
@@ -176,22 +179,45 @@ class FluxGenerator:
 
 
 flux_generator = None
+bg_remove_pipe = None
+transform_image = None
 executor = ThreadPoolExecutor(max_workers=1)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def initialize_pipelines():
     """Initialize the diffusion pipelines with InstantID and SDXL-Lightning - GPU optimized"""
-    global flux_generator
+    global flux_generator,bg_remove_pipe,transform_image
     try:
         flux_generator = FluxGenerator()
+        bg_remove_pipe = AutoModelForImageSegmentation.from_pretrained(
+            "briaai/RMBG-2.0", trust_remote_code=True
+        )
+        bg_remove_pipe.to('cuda')
+        transform_image = transforms.Compose(
+            [
+                transforms.Resize((1024, 1024)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        )
 
     except Exception as e:
         logger.error(f"Failed to initialize pipelines: {e}")
         raise
 
 
-
+def remove_background(image):
+    image_size = image.size
+    input_images = transform_image(image).unsqueeze(0).to("cuda")
+    # Prediction
+    with torch.no_grad():
+        preds = bg_remove_pipe(input_images)[-1].sigmoid().cpu()
+    pred = preds[0].squeeze()
+    pred_pil = transforms.ToPILImage()(pred)
+    mask = pred_pil.resize(image_size)
+    image.putalpha(mask)
+    return image
 
 @torch.inference_mode()
 
@@ -269,12 +295,13 @@ async def gen_img2img(job_id: str, face_image : Image.Image,request: Img2ImgRequ
     )
     
 
-    # if request.detail_face:
-    #     generated_image = detail_face(generated_image, face_image)
+
+    remove_bg = remove_background(gen_image)
+    cropped_image = remove_bg.crop(remove_bg.getbbox())
     filename = f"{job_id}_base.png"
     filepath = os.path.join(results_dir, filename)
-    gen_image.save(filepath)
-        
+    cropped_image.save(filepath)
+
     metadata = {
         "job_id": job_id,
         "type": "head_swap",
